@@ -109,28 +109,3 @@
   []
   )
 
-(comment
-  (def person-view {:view "by-person"
-                    :design "app"
-                    :db "dev"
-                    :descending true
-                    :limit 10
-                    :include_docs true})
-
-  (get-docs person-view (fn [docs] (println docs)))
-
-  )
-
-
-;; Experimentation
-(def parks {:db "nps" :design "units" :view "by-name-and-type"
-            :reduce false :include_docs true})
-
-(defn get-parks [rows]
-  (map #(str (:key %) " - " (-> % :doc :location)) rows))
-
-(defn show-parks [r]
-  (doseq [park (get-parks (:rows r))]
-    (clojure.browser.dom/log park)))
-
-(get-docs parks show-parks)
