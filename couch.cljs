@@ -16,6 +16,12 @@
 ;;
 ;; Configuration
 ;;
+(comment
+  I want it to be like
+  (jaki/set-url-prefix "foo")
+  (jaki/set-default-db "bar")
+  (jaki/get-docs #(output-doc-list %))
+  )
 (comment (defn set-url-prefix [prefix]
            (reset! *url-prefix* prefix)))
 
