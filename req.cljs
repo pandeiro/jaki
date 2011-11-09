@@ -5,8 +5,8 @@
   (:refer-clojure :exclude [get]))
 
 (defn request
-  "Carries out an HTTP request, converting any payload from Clojure map to JS object,
-  and passes JSON response to callback as a Clojure map."
+  "Carries out an HTTP request, converting any payload from Clojure map to JSON string,
+  and passes JSON string response to callback as a Clojure map."
   ([url]
      (request url nil "GET" nil nil))
   ([url callback]
