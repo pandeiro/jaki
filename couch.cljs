@@ -3,27 +3,30 @@
             [clojure.string :as string]
             [goog.json :as json]))
 
-(def *url-prefix* "")
+;;
+;; Global environmental variables for URL prefix and default database
+;; along with setter methods
+;;
+(def *url-prefix* (atom ""))
+(def *default-db* (atom nil))
+
+(defn set-url-prefix [prefix]
+  (reset! *url-prefix* (if (or (= "" prefix) (= "/" (.substr prefix 0 1))) prefix
+                           (str "/" prefix))))
+
+(defn set-default-db [db]
+  (reset! *default-db* db))
 
 (defn- url [path]
-  (str *url-prefix* path))
+  (str @*url-prefix* path))
+
+(defn- default-db-set? []
+  (if (nil? @*default-db*) false true))
 
 (defn- encode-doc-id [id]
   (if (= "_design" (first (string/split id "/")))
     (str "_design/" (js/encodeURIComponent (subs id (.length "_design/"))))
     (js/encodeURIComponent id)))
-
-;;
-;; Configuration
-;;
-(comment
-  I want it to be like
-  (jaki/set-url-prefix "foo")
-  (jaki/set-default-db "bar")
-  (jaki/get-docs #(output-doc-list %))
-  )
-(comment (defn set-url-prefix [prefix]
-           (reset! *url-prefix* prefix)))
 
 (defn config
   ([callback]
@@ -53,8 +56,9 @@
 (defn get-users-db [callback]
   (get-session #(callback (-> % :info :authentication_db))))
 
-(defn make-user-doc [])
-(defn sign-up [user-doc password callback])
+;; TODO
+; (defn make-user-doc [])
+; (defn sign-up [user-doc password callback])
 
 (defn login
   ([username password]
@@ -80,6 +84,12 @@
 (defn about-db [name callback]
   (req/get (url (str "/" name)) callback))
 
+(defn guess-current-db
+  "Quick and dirty way to not have to specify any db, using pathname"
+  []
+  (aget (.split (.pathname (.location js/window)) "/")
+        (+ 1 (- (.length (.split @*url-prefix* "/")) 1))))
+
 ;;
 ;; Documents
 ;;
@@ -91,27 +101,33 @@
         (str "/" (:db view-map) "/_all_docs")))
 
 (defn- to-qstr [view-map]
-  (let [opts (select-keys view-map [:key :startkey :startkey_docid :endkey
-                                    :endkey_docid :limit :stale :descending :skip
-                                    :group :group_level :reduce :include_docs
-                                    :inclusive_end :update_seq])]
-    (if (empty? opts) ""
-        (str "?" (apply str
-                        (interpose "&"
-                                   (map (fn [[k v]] (str (name k) "="
-                                                         (js/encodeURIComponent v)))
-                                        opts)))))))
+  (let [opts (select-keys view-map [:key :startkey :startkey_docid :endkey :endkey_docid :limit
+                                    :stale :descending :skip :group :group_level :reduce
+                                    :include_docs :inclusive_end :update_seq])]
+    (if (empty? opts)
+      ""
+      (str "?" (apply str (interpose "&" (map (fn [[k v]]
+                                                (str (name k) "=" (js/encodeURIComponent v)))
+                                              opts)))))))
 
 (defn get-docs
-  "Retrieves a view if design and view are specified in the view-map, otherwise all_docs"
-  [view-map callback]
-  (let [uri (url (str (to-path view-map) (to-qstr view-map)))]
-    (if (:keys view-map)
-      (req/post uri callback (:keys view-map))
-      (req/get uri callback))))
+  "Retrieves a view if db, design, and view are specified in the view-map, otherwise all_docs
+  (optionally filtered by keys). If no viewmap is specified, defaults to returning all_docs
+  with include_docs=true on default db (if specified) or current db derived from path"
+  ([callback] (get-docs {:db (if (default-db-set?) @*default-db* (guess-current-db))
+                         :include_docs true} callback))
+  ([view-map callback]
+     (let [uri (url (str (to-path view-map) (to-qstr view-map)))]
+       (if (:keys view-map)
+         (req/post uri callback (:keys view-map))
+         (req/get uri callback)))))
 
 (defn post-docs
-  "Saves one or more docs to the database"
-  []
-  )
+  "Saves one or more docs to default, current, or specified database"
+  ([doc-or-docs] (post-docs doc-or-docs #()))
+  ([doc-or-docs callback] (post-docs doc-or-docs callback
+                                     (if (default-db-set?) @*default-db* (guess-current-db))))
+  ([doc-or-docs db callback]
+     (let [data {:docs (if (vector? doc-or-docs) doc-or-docs (vector doc-or-docs))}]
+       (req/post (url "/" db "/_bulk_docs") callback data))))
 
