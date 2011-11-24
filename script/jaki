@@ -1,0 +1,86 @@
+#!/usr/bin/env bash
+
+##################################################################################
+# Note: if you are relocating this script, ensure that these two variables point #
+# to the appropriate locations for the couchapp template and Jaki library        #
+##################################################################################
+TEMPLATE_DIR=../couchapp-template
+JAKI_DIR=../src/jaki
+
+# If you have a standard .gitignore, specify it here, otherwise ignore
+GITIGNORE=~/.templates/.gitignore
+
+USAGE='USAGE: jaki [command] <appname>'
+
+CMD=$1
+APP=$2
+
+#
+# Sanity checks
+#
+if [ $# -ne 2 ]; then
+    echo "$USAGE"
+    exit 1
+fi
+
+if [ "$CMD" != "new" ]; then
+    echo "$USAGE"
+    echo "For now, jaki only has one command: new"
+    exit 1
+fi
+
+if [ -a "$APP" ]; then
+    echo "$APP already exists in this directory. Not overwriting."
+    exit 1
+fi
+
+if [ ! -d $TEMPLATE_DIR ]; then
+    echo "Could not find CouchApp template, exiting"
+    exit 1
+fi
+
+if [ ! -d $JAKI_DIR ]; then
+    echo "Could not find jaki library, exiting"
+    exit 1
+fi
+
+#
+# Directory structure
+#
+mkdir -p "$APP"/app "$APP"/src/"$APP" "$APP"/src/jaki
+
+cp -R $TEMPLATE_DIR/* "$APP"/app/
+cp -R $TEMPLATE_DIR/.couchapp* "$APP"/app/
+cp -R $JAKI_DIR/* "$APP"/src/jaki/
+
+#
+# ClojureScript boilerplate
+#
+echo "(ns $APP.app
+  (:require [clojure.browser.repl :as repl]
+            [jaki.couch :as couch]))
+
+(repl/connect \"http://localhost:9000/repl\")
+
+(defn ^:export start []
+  ;; Play your piano
+  )
+" > "$APP/src/$APP/app.cljs"
+
+#
+# HTML boilerplate
+#
+sed -i \
+    -e "s/<!-- Title -->/$APP/" \
+    -e "s/<!-- Start -->/$APP.app.start()/" \
+    $APP/app/_attachments/index.html
+
+#
+# Standard .gitignore template if one exists
+#
+if [ -f $GITIGNORE ]; then
+    cp $GITIGNORE "$APP"/
+fi
+
+exit
+
