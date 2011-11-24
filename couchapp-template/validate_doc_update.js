@@ -1,0 +1,3 @@
+function(newDoc, oldDoc, userCtx) {
+  //...
+}
