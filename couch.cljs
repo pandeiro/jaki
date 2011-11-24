@@ -1,7 +1,9 @@
 (ns jaki.couch
   (:require [jaki.req :as req]
             [clojure.string :as string]
-            [goog.json :as json]))
+            [goog.array :as garr]
+            [goog.json :as json]
+            [goog.crypt.Sha1 :as sha1]))
 
 ;;
 ;; Global environmental variables for URL prefix and default database
@@ -56,9 +58,27 @@
 (defn get-users-db [callback]
   (get-session #(callback (-> % :info :authentication_db))))
 
-;; TODO
-; (defn make-user-doc [])
-; (defn sign-up [user-doc password callback])
+(defn new-uuid []
+  (apply str (repeatedly 32 #(get "0123456789abcdef" (. js/Math (floor (rand 16)))))))
+
+;; Note: doesn't account for chars > 1b, but neither does JS that ships with CouchDB, apparently
+(defn- string-to-bytes [s]
+  (let [get-byte #(if (string? %) (bit-and (.charCodeAt % 0) 0xFF) %)]
+    (if (= 1 (count s))
+      (garr/concat (get-byte s))
+      (reduce #(garr/concat (get-byte %1) (get-byte %2)) s))))
+
+(defn sign-up
+  ([user-doc password] (sign-up user-doc password nil))
+  ([user-doc password callback]
+     (let [sha1 (goog.crypt.Sha1.) salt (new-uuid)
+           id (or (:_id user-doc) (str "org.couchdb.user:" (:name user-doc)))
+           roles (or (:roles user-doc) [])]
+       (do (.update sha1 (string-to-bytes (str password salt)))
+           (get-user-db (fn [db]
+                          (post-docs (assoc user-doc :salt salt :_id id :type "user" :_roles roles
+                                            :password_sha (.join (garr/map (. sha1 (digest)) #(.toString % 16)) ""))
+                                     db callback)))))))
 
 (defn login
   ([username password]
@@ -104,12 +124,14 @@
   (let [opts (select-keys view-map [:key :startkey :startkey_docid :endkey :endkey_docid :limit
                                     :stale :descending :skip :group :group_level :reduce
                                     :include_docs :inclusive_end :update_seq])]
-    (if (empty? opts)
-      ""
-      (str "?" (apply str (interpose "&" (map (fn [[k v]]
-                                                (str (name k) "=" (js/encodeURIComponent v)))
-                                              opts)))))))
+    (if (empty? opts) ""
+        (str "?" (apply str (interpose "&" (map (fn [[k v]]
+                                                  (str (name k) "=" (js/encodeURIComponent v)))
+                                                opts)))))))
 
+;; TODO: handle single document use case from get-docs, ie (get-docs "b9328525325236d34f325" (fn [doc] ... ))
+;; TODO: handle vector of docs as alias for {:keys ...}, ie (get-docs ["a4c2523562db323252352" "a4c25232362ea343242a"] (fn [docs] ... ))
+;; TODO: handle limit results use case with _all_docs, ie (get-docs 10 (fn [r] ... ))
 (defn get-docs
   "Retrieves a view if db, design, and view are specified in the view-map, otherwise all_docs
   (optionally filtered by keys). If no viewmap is specified, defaults to returning all_docs
@@ -125,9 +147,10 @@
 (defn post-docs
   "Saves one or more docs to default, current, or specified database"
   ([doc-or-docs] (post-docs doc-or-docs #()))
-  ([doc-or-docs callback] (post-docs doc-or-docs callback
-                                     (if (default-db-set?) @*default-db* (guess-current-db))))
+  ([doc-or-docs callback] (post-docs doc-or-docs (if (default-db-set?) @*default-db* (guess-current-db))
+                                     callback))
   ([doc-or-docs db callback]
      (let [data {:docs (if (vector? doc-or-docs) doc-or-docs (vector doc-or-docs))}]
        (req/post (url "/" db "/_bulk_docs") callback data))))
 
+;; TODO: delete-docs
