@@ -4,8 +4,8 @@
 # Note: if you are relocating this script, ensure that these two variables point #
 # to the appropriate locations for the couchapp template and Jaki library        #
 ##################################################################################
-TEMPLATE_DIR=../couchapp-template
-JAKI_DIR=../src/jaki
+TEMPLATE_DIR=couchapp-template
+JAKI_DIR=src/jaki
 
 # If you have a standard .gitignore, specify it here, otherwise ignore
 GITIGNORE=~/.templates/.gitignore
