@@ -129,20 +129,18 @@
                                                   (str (name k) "=" (js/encodeURIComponent v)))
                                                 opts)))))))
 
-;; TODO: handle single document use case from get-docs, ie (get-docs "b9328525325236d34f325" (fn [doc] ... ))
-;; TODO: handle vector of docs as alias for {:keys ...}, ie (get-docs ["a4c2523562db323252352" "a4c25232362ea343242a"] (fn [docs] ... ))
-;; TODO: handle limit results use case with _all_docs, ie (get-docs 10 (fn [r] ... ))
+(defn- resolve-db []
+  (if (default-db-set?) @*default-db* (guess-current-db)))
+
 (defn get-docs
-  "Retrieves a view if db, design, and view are specified in the view-map, otherwise all_docs
-  (optionally filtered by keys). If no viewmap is specified, defaults to returning all_docs
-  with include_docs=true on default db (if specified) or current db derived from path"
-  ([callback] (get-docs {:db (if (default-db-set?) @*default-db* (guess-current-db))
-                         :include_docs true} callback))
-  ([view-map callback]
-     (let [uri (url (str (to-path view-map) (to-qstr view-map)))]
-       (if (:keys view-map)
-         (req/post uri callback (:keys view-map))
-         (req/get uri callback)))))
+  ([callback] (get-docs {:db (resolve-db) :include_docs true} callback))
+  ([specifier callback]
+     (cond (string? specifier) (req/get (url (str "/" (resolve-db) "/" specifier)) callback)
+           (number? specifier) (get-docs {:db (resolve-db) :include_docs true :limit specifier} callback)
+           (vector? specifier) (get-docs {:db (resolve-db) :include_docs true :keys specifier} callback)
+           (map? specifier) (let [uri (url (str (to-path specifier) (to-qstr specifier)))]
+                              (if (:keys specifier) (req/post uri callback {:keys (:keys specifier)})
+                                  (req/get uri callback))))))
 
 (defn post-docs
   "Saves one or more docs to default, current, or specified database"
