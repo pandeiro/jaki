@@ -143,12 +143,16 @@
                                   (req/get uri callback))))))
 
 (defn post-docs
-  "Saves one or more docs to default, current, or specified database"
-  ([doc-or-docs] (post-docs doc-or-docs #()))
-  ([doc-or-docs callback] (post-docs doc-or-docs (if (default-db-set?) @*default-db* (guess-current-db))
-                                     callback))
+  ([doc-or-docs] (post-docs doc-or-docs nil))
+  ([doc-or-docs callback] (post-docs doc-or-docs (resolve-db) callback))
   ([doc-or-docs db callback]
      (let [data {:docs (if (vector? doc-or-docs) doc-or-docs (vector doc-or-docs))}]
        (req/post (url "/" db "/_bulk_docs") callback data))))
 
-;; TODO: delete-docs
+(defn delete-docs
+  ([doc-or-docs] (delete-docs doc-or-docs nil))
+  ([doc-or-docs callback] (delete-docs (resolve-db) callback))
+  ([doc-or-docs db callback]
+     (if (vector? doc-or-docs)
+       (req/post (url "/" db "/_bulk_docs") callback (vec (for [d doc-or-docs] (assoc d :_deleted true))))
+       (req/delete (url "/" db "/" (:_id doc-or-docs)) callback))))
