@@ -46,7 +46,8 @@ For more granular control, specify a view-map with a database and (optionally) d
 
 ### `post-docs`
 
-You can save a document (map) or vector of documents, with or without a callback, and with or without specifying the database:
+You can save a document (map) or vector of documents, with or without a callback, and with or 
+without specifying the database:
 
     (post-docs {:_id "b9725ae4542ce6252937" :_rev "3-a2362326892374879692"} (fn [resp] (js/alert "Updated!")))
 
@@ -57,11 +58,18 @@ You can save a document (map) or vector of documents, with or without a callback
 
 Likewise, documents can be deleted in the same way they are posted:
 
-    (delete-docs "b9725ae4542ce6252937")
+    (delete-docs {:_id "b9725ae4542ce6252937" :_rev "3-a2362326892374879692"})
 	
-	(delete-docs "albums" ["ce672987ad32919732523b6" "ce672987ad32919732527f9"]
+	(delete-docs "albums" [{:_id "ce672987ad32919732523b6" :_rev "2-ab4452cd382236274346}
+	                       {:_id "ce672987ad32919732527f9" :_rev "1-f32353a25bc544574232}]
 	             (fn [resp] (js/alert "Deleted!")))
-				 
+
+There's also sugar for when you don't have the rev handy, in which case you can just use the
+id string, though this has a performance penalty of an extra request behind-the-scenes to retrieve
+the _rev:
+
+    (delete-docs ["ce672987ad32919732523b6" "ce672987ad32919732527f9"])
+
 Listening for _changes
 ----------------------
 
