@@ -138,8 +138,9 @@
      (cond (string? specifier) (req/get (url (str "/" (resolve-db) "/" specifier)) callback)
            (number? specifier) (get-docs {:db (resolve-db) :include_docs true :limit specifier} callback)
            (vector? specifier) (get-docs {:db (resolve-db) :include_docs true :keys specifier} callback)
-           (map? specifier) (let [uri (url (str (to-path specifier) (to-qstr specifier)))]
-                              (if (:keys specifier) (req/post uri callback {:keys (:keys specifier)})
+           (map? specifier) (let [view-map (if (contains? specifier :db) specifier (assoc specifier :db (resolve-db)))
+                                  uri (url (str (to-path view-map) (to-qstr view-map)))]
+                              (if (:keys view-map) (req/post uri callback {:keys (:keys view-map)})
                                   (req/get uri callback))))))
 
 (defn post-docs
@@ -147,12 +148,12 @@
   ([doc-or-docs callback] (post-docs doc-or-docs (resolve-db) callback))
   ([doc-or-docs db callback]
      (let [data {:docs (if (vector? doc-or-docs) doc-or-docs (vector doc-or-docs))}]
-       (req/post (url "/" db "/_bulk_docs") callback data))))
+       (req/post (url (str "/" db "/_bulk_docs")) callback data))))
 
 (defn delete-docs
   ([doc-or-docs] (delete-docs doc-or-docs nil))
   ([doc-or-docs callback] (delete-docs (resolve-db) callback))
   ([doc-or-docs db callback]
      (if (vector? doc-or-docs)
-       (req/post (url "/" db "/_bulk_docs") callback (vec (for [d doc-or-docs] (assoc d :_deleted true))))
-       (req/delete (url "/" db "/" (:_id doc-or-docs)) callback))))
+       (req/post (url (str "/" db "/_bulk_docs")) callback (vec (for [d doc-or-docs] (assoc d :_deleted true))))
+       (req/delete (url (str "/" db "/" (:_id doc-or-docs))) callback))))
