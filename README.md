@@ -25,24 +25,24 @@ Jaki abstracts CRUD operations to three main functions: `get-docs`, `post-docs`,
 
 ### `get-docs`
 
-At its simplest, Jaki guesses the current database (or taps a default database if set), and requests all documents:
+At its simplest, Jaki guesses the current database (or taps a default database if set), and requests all documents (with include_docs=true):
 
     (get-docs (fn [resp] (js/alert (str (-> resp :rows count) " documents found!"))))
 
-There's also some sugar for limiting the number of results:
+There's also some sugar for limiting the number of results (also implies include_docs=true):
 
     (get-docs 10 (fn [resp] 
 	               (js/alert (apply str (map #(str %2 ". " (:id %1) "\n") (:rows resp) (iterate inc 1))))))
 
-And there's sugar for specifying just the document(s) you want by id, like so:
+And there's sugar for specifying just the document(s) you want by id, like so (also implies include_docs=true):
 
     (get-docs ["_design/app" "_design/test"]
 	          (fn [docs] (js/alert (str (count (map #(->> % :views keys) docs)) " total views found"))))
 
-For more granular control, specify a view-map with a database and (optionally) design document, view, and options:
+For more granular control, specify a view-map with a database and/or design document, view, and options (no implict include_docs=true):
 
-    (get-docs {:db "articles" :design "blog" :view "most-recent" :descending true :limit 10}
-	          (fn [resp] (js/alert (->> resp :rows first :title))))
+    (get-docs {:db "articles" :design "blog" :view "most-recent" :descending true :include_docs true :limit 10}
+	          (fn [resp] (js/alert (->> resp :rows first :doc :title))))
 
 ### `post-docs`
 
