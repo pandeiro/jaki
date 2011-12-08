@@ -70,61 +70,6 @@ the _rev:
 
     (delete-docs ["ce672987ad32919732523b6" "ce672987ad32919732527f9"])
 
-Listening for _changes
-----------------------
-
-Jaki's _changes API has two functions, `listen` and `unlisten`.
-
-### `listen`
-
-Again, you can simply attach a function to the current/default database's changes feed like so:
-
-    (listen (fn [resp] (js/alert (str (->> resp :results count) " new change(s)"))))
-	
-Or you can specify a database, and optionally, a filter:
-
-    (listen {:db "albums" :filter "artists/pianists"} (fn [resp] (js/alert "New rag!?")))
-
-And if you want to be able to unlisten this specific feed later, use an id when registering the listener:
-
-    (listen "messages" {:db "chatroom"} (fn [resp] (js/alert "New message!")))
-	
-### `unlisten`
-
-If no identifier is used, `unlisten` stops all listeners to the current/default/specified database's changes feed:
-
-    (unlisten)
-	
-	(unlisten {:db "albums"})
-	
-Or use an id to specify which listener to stop:
-
-    (unlisten "messages")
-	
-You can also register a callback, in case you want to update the DOM or something after unlistening:
-
-    (unlisten (fn [] (js/alert "Not listening anymore")))
-
-Replication
------------
-
-Jaki has a shortcut function that simply uses the [_replicator database](https://gist.github.com/832610) (CouchDB >1.0.2) for replication.
-
-### `replicate`
-
-Again, callback and database are optional (Jaki will use default or current database if source or target key are missing). The _id
-field is also optional; Jaki will supply a new uuid if none is present:
-
-    (replicate {:target "http://yourcouch.iriscouch.com/albums"})
-	
-	(replicate {:_id "continuous-album-rep" :source "http://yourcouch.iriscouch.com/albums" :continuous true}
-	           (fn [resp] (js/alert "Replicating albums")))
-
-Complete API
-------------
-
-For now, see `couch.cljs` for the complete API. Eventually I will add some auto-documentation.
-
 App Generator Script
 --------------------
 
@@ -139,6 +84,14 @@ will be a basic couchapp structure with an `index.html` that already contains a 
 
 From here, simply specify authentication credentials and target database in `.couchapprc` and compile the `src` subdirectory
 and you are ready to push your couchapp.
+
+
+API Todo
+--------
+
+- Listening for _changes
+
+- Replication
 
 Contributing
 ------------
