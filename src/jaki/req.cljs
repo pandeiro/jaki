@@ -27,7 +27,9 @@
                            (callback (js->clj (parse-json (.getResponseText (.-target e)))
                                               :keywordize-keys true))))
            payload (if (or (string? payload) (number? payload) (nil? payload)) payload
-                       (json/serialize (if (map? payload) (clj->js payload) payload)))
+                       (json/serialize (if (or (map? payload) (coll? payload))
+                                         (clj->js payload)
+                                         payload)))
            headers (if (map? headers) (clj->js headers) headers)]
        (xhr/send url do-callback method payload headers))))
 
