@@ -6,4 +6,6 @@
 auto-save-list
 tramp
 .\#*
+.lein*
+lib/*
 
