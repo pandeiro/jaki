@@ -16,7 +16,7 @@ Just include the `src/jaki` directory in your ClojureScript project, and referen
     (ns myapp.core
 	  (:require [jaki.couch :as couch]))
 
-    (couch/get-all-dbs (fn [dbs] (js/alert (apply str (interpose ", " dbs)))))
+    (couch/all-dbs (fn [dbs] (js/alert (apply str (interpose ", " dbs)))))
 	
 Couch CRUD
 ----------
