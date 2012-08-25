@@ -8,4 +8,7 @@ tramp
 .\#*
 .lein*
 lib/*
+pom.*
+target/*
+
 
