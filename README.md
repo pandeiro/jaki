@@ -63,7 +63,7 @@ without specifying the database:
 (post-docs {:_id "b9725ae4542ce6252937" :_rev "3-a2362326892374879692"} (fn [resp] (js/alert "Updated!")))
 
 (post-docs "albums" [{:title "St. Louis Blues" :album "Sunshine of my Soul" :recorded -68508000000}
-            {:title "Parisian Thoroughfare" :album "The Jaki Byard Experience" :recorded -40683600000}])
+	             {:title "Parisian Thoroughfare" :album "The Jaki Byard Experience" :recorded -40683600000}])
 ```
 
 ### `delete-docs`
