@@ -6,24 +6,30 @@
             [goog.crypt.Sha1 :as sha1]))
 
 ;;
-;; Global environmental variables for URL prefix and default database
+;; Global environmental variables for host, URL prefix and default database
 ;; along with setter methods
 ;;
-(def *url-prefix* (atom ""))
-(def *default-db* (atom nil))
+(def host (atom nil))
+(def url-prefix (atom ""))
+(def default-db (atom nil))
+
+(defn set-host! [s]
+  (reset! host s))
 
 (defn set-url-prefix [prefix]
-  (reset! *url-prefix* (if (or (= "" prefix) (= "/" (.substr prefix 0 1))) prefix
-                           (str "/" prefix))))
+  (reset! url-prefix (if (or (= "" prefix) (= "/" (.substr prefix 0 1))) prefix
+                         (str "/" prefix))))
 
 (defn set-default-db [db]
-  (reset! *default-db* db))
+  (reset! default-db db))
 
 (defn- url [path]
-  (str @*url-prefix* path))
+  (if-not (empty? @host)
+    (str @host @url-prefix path)
+    (str @url-prefix path)))
 
 (defn- default-db-set? []
-  (if (nil? @*default-db*) false true))
+  (if (nil? @default-db) false true))
 
 (defn- encode-doc-id [id]
   (if (= "_design" (first (string/split id "/")))
@@ -108,7 +114,7 @@
   "Quick and dirty way to not have to specify any db, using pathname"
   []
   (aget (.split (.pathname (.location js/window)) "/")
-        (+ 1 (- (.length (.split @*url-prefix* "/")) 1))))
+        (+ 1 (- (.length (.split @url-prefix "/")) 1))))
 
 ;;
 ;; Documents
@@ -130,7 +136,7 @@
                                                 opts)))))))
 
 (defn- resolve-db []
-  (if (default-db-set?) @*default-db* (guess-current-db)))
+  (if (default-db-set?) @default-db (guess-current-db)))
 
 (defn get-docs
   ([callback] (get-docs {:db (resolve-db) :include_docs true} callback))
