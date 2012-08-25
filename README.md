@@ -44,7 +44,7 @@ And there's sugar for specifying just the document(s) you want by id, like so (a
 
 ```clojure
 (get-docs ["_design/app" "_design/test"]
-	  (fn [docs] (js/alert (str (count (map #(-> % :views keys) docs)) " total views found"))))
+          (fn [docs] (js/alert (str (count (map #(-> % :views keys) docs)) " total views found"))))
 ```
 
 For more granular control, specify a view-map with a database and/or design document, view, and options (no implict include_docs=true):
@@ -63,7 +63,7 @@ without specifying the database:
 (post-docs {:_id "b9725ae4542ce6252937" :_rev "3-a2362326892374879692"} (fn [resp] (js/alert "Updated!")))
 
 (post-docs "albums" [{:title "St. Louis Blues" :album "Sunshine of my Soul" :recorded -68508000000}
-	             {:title "Parisian Thoroughfare" :album "The Jaki Byard Experience" :recorded -40683600000}])
+                     {:title "Parisian Thoroughfare" :album "The Jaki Byard Experience" :recorded -40683600000}])
 ```
 
 ### `delete-docs`
