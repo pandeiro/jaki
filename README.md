@@ -13,11 +13,13 @@ Usage
 
 Just include the `src/jaki` directory in your ClojureScript project, and reference it:
 
-    (ns myapp.core
-	  (:require [jaki.couch :as couch]))
+```clojure
+(ns myapp.core
+  (:require [jaki.couch :as couch]))
 
-    (couch/all-dbs (fn [dbs] (js/alert (apply str (interpose ", " dbs)))))
-	
+(couch/all-dbs (fn [dbs] (js/alert (apply str (interpose ", " dbs)))))
+```
+
 Couch CRUD
 ----------
 
@@ -27,48 +29,62 @@ Jaki abstracts CRUD operations to three main functions: `get-docs`, `post-docs`,
 
 At its simplest, Jaki guesses the current database (or taps a default database if set), and requests all documents (with include_docs=true):
 
-    (get-docs (fn [resp] (js/alert (str (-> resp :rows count) " documents found!"))))
+```clojure
+(get-docs (fn [resp] (js/alert (str (-> resp :rows count) " documents found!"))))
+```
 
 There's also some sugar for limiting the number of results (also implies include_docs=true):
 
-    (get-docs 10 (fn [resp] 
-	               (js/alert (apply str (map #(str %2 ". " (:id %1) "\n") (:rows resp) (iterate inc 1))))))
+```clojure
+(get-docs 10 (fn [resp] 
+               (js/alert (apply str (map #(str %2 ". " (:id %1) "\n") (:rows resp) (iterate inc 1))))))
+```
 
 And there's sugar for specifying just the document(s) you want by id, like so (also implies include_docs=true):
 
-    (get-docs ["_design/app" "_design/test"]
-	          (fn [docs] (js/alert (str (count (map #(->> % :views keys) docs)) " total views found"))))
+```clojure
+(get-docs ["_design/app" "_design/test"]
+	  (fn [docs] (js/alert (str (count (map #(->> % :views keys) docs)) " total views found"))))
+```
 
 For more granular control, specify a view-map with a database and/or design document, view, and options (no implict include_docs=true):
 
-    (get-docs {:db "articles" :design "blog" :view "most-recent" :descending true :include_docs true :limit 10}
-	          (fn [resp] (js/alert (->> resp :rows first :doc :title))))
+```clojure
+(get-docs {:db "articles" :design "blog" :view "most-recent" :descending true :include_docs true :limit 10}
+          (fn [resp] (js/alert (->> resp :rows first :doc :title))))
+```
 
 ### `post-docs`
 
 You can save a document (map) or vector of documents, with or without a callback, and with or 
 without specifying the database:
 
-    (post-docs {:_id "b9725ae4542ce6252937" :_rev "3-a2362326892374879692"} (fn [resp] (js/alert "Updated!")))
+```clojure
+(post-docs {:_id "b9725ae4542ce6252937" :_rev "3-a2362326892374879692"} (fn [resp] (js/alert "Updated!")))
 
-    (post-docs "albums" [{:title "St. Louis Blues" :album "Sunshine of my Soul" :recorded -68508000000}
-	            {:title "Parisian Thoroughfare" :album "The Jaki Byard Experience" :recorded -40683600000}])
+(post-docs "albums" [{:title "St. Louis Blues" :album "Sunshine of my Soul" :recorded -68508000000}
+            {:title "Parisian Thoroughfare" :album "The Jaki Byard Experience" :recorded -40683600000}])
+```
 
 ### `delete-docs`
 
 Likewise, documents can be deleted in the same way they are posted:
 
-    (delete-docs {:_id "b9725ae4542ce6252937" :_rev "3-a2362326892374879692"})
+```clojure
+(delete-docs {:_id "b9725ae4542ce6252937" :_rev "3-a2362326892374879692"})
 	
-	(delete-docs "albums" [{:_id "ce672987ad32919732523b6" :_rev "2-ab4452cd382236274346}
-	                       {:_id "ce672987ad32919732527f9" :_rev "1-f32353a25bc544574232}]
-	             (fn [resp] (js/alert "Deleted!")))
+(delete-docs "albums" [{:_id "ce672987ad32919732523b6" :_rev "2-ab4452cd382236274346}
+                       {:_id "ce672987ad32919732527f9" :_rev "1-f32353a25bc544574232}]
+             (fn [resp] (js/alert "Deleted!")))
+```
 
 There's also sugar for when you don't have the rev handy, in which case you can just use the
 id string, though this has a performance penalty of an extra request behind-the-scenes to retrieve
 the _rev:
 
-    (delete-docs ["ce672987ad32919732523b6" "ce672987ad32919732527f9"])
+```clojure
+(delete-docs ["ce672987ad32919732523b6" "ce672987ad32919732527f9"])
+```
 
 App Generator Script
 --------------------
