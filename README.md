@@ -11,7 +11,15 @@ Jaki's principal components are
 Usage
 -----
 
-Just include the `src/jaki` directory in your ClojureScript project, and reference it:
+With leiningen:
+
+```clojure
+[jaki "0.1.0"]
+```
+
+...or just copy the `src/jaki` directory to your ClojureScript project.
+
+Use or require the library's namespace:
 
 ```clojure
 (ns myapp.core
