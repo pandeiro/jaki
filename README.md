@@ -73,8 +73,8 @@ Likewise, documents can be deleted in the same way they are posted:
 ```clojure
 (delete-docs {:_id "b9725ae4542ce6252937" :_rev "3-a2362326892374879692"})
 	
-(delete-docs "albums" [{:_id "ce672987ad32919732523b6" :_rev "2-ab4452cd382236274346}
-                       {:_id "ce672987ad32919732527f9" :_rev "1-f32353a25bc544574232}]
+(delete-docs "albums" [{:_id "ce672987ad32919732523b6" :_rev "2-ab4452cd382236274346"}
+                       {:_id "ce672987ad32919732527f9" :_rev "1-f32353a25bc544574232"}]
              (fn [resp] (js/alert "Deleted!")))
 ```
 
