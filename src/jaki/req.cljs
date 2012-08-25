@@ -4,6 +4,12 @@
             [goog.json :as json])
   (:refer-clojure :exclude [get]))
 
+;; For some odd reason, goog.json.parse uses eval, which is not allowed in Chrome
+;; extensions and is generally evil. So if native JSON support exists (it's 2012),
+;; use that.
+(defn- parse-json [s]
+  (if js/JSON (.parse js/JSON s) (json/parse s)))
+
 (defn request
   "Carries out an HTTP request, converting any payload from Clojure map to JSON string,
   and passes JSON string response to callback as a Clojure map."
@@ -16,10 +22,10 @@
   ([url callback method payload]
      (request url callback method payload nil))
   ([url callback method payload headers]
-     (let [do-callback (if (fn? callback)
-                         (fn [e] (callback (js->clj (. e/target (getResponseJson))
-                                                    :keywordize-keys true)))
-                         nil)
+     (let [do-callback (when (fn? callback)
+                         (fn [e]
+                           (callback (js->clj (parse-json (.getResponseText (.-target e)))
+                                              :keywordize-keys true))))
            payload (if (or (string? payload) (number? payload) (nil? payload)) payload
                        (json/serialize (if (map? payload) (clj->js payload) payload)))
            headers (if (map? headers) (clj->js headers) headers)]
