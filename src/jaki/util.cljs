@@ -8,7 +8,7 @@
   (cond
    (string? x) x
    (keyword? x) (name x)
-   (map? x) (.strobj (reduce (fn [m [k v]]
-                               (assoc m (clj->js k) (clj->js v))) {} x))
+   (map? x) (.-strobj (reduce (fn [m [k v]]
+                                (assoc m (clj->js k) (clj->js v))) {} x))
    (coll? x) (apply array (map clj->js x))
-       :else x))
+   :else x))
