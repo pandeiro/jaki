@@ -1,4 +1,4 @@
-Jaki 0.0.1
+Jaki 0.1.0
 ==========
 *Browser-based [CouchDB](http://couchdb.apache.org) applications with [ClojureScript](http://github.com/clojure/clojurescript)*
 
