@@ -20,6 +20,30 @@ Just include the `src/jaki` directory in your ClojureScript project, and referen
 (couch/all-dbs (fn [dbs] (js/alert (apply str (interpose ", " dbs)))))
 ```
 
+Setup
+-----
+
+Jaki will automatically try to use the URL path to determine the current database, although
+you can always specify the database in each request as well.
+
+You also have the option of setting a default database to use:
+
+```clojure
+(couch/set-default-db "jazz")
+(couch/get-docs (fn [resp] (js/alert (str (count (:rows resp)) " docs found in 'jazz' database"))))
+```
+
+If you are able to do cross-domain XHR requests, as with browser extensions, you can set the host like so:
+
+```clojure
+(couch/set-host! "http://username.iriscouch.com")
+```
+
+If your endpoint is not at the root of the URL path, you can set a prefix like so:
+```clojure
+(couch/set-url-prefix "myapp")
+```
+
 Couch CRUD
 ----------
 
