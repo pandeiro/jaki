@@ -44,14 +44,14 @@ And there's sugar for specifying just the document(s) you want by id, like so (a
 
 ```clojure
 (get-docs ["_design/app" "_design/test"]
-	  (fn [docs] (js/alert (str (count (map #(->> % :views keys) docs)) " total views found"))))
+	  (fn [docs] (js/alert (str (count (map #(-> % :views keys) docs)) " total views found"))))
 ```
 
 For more granular control, specify a view-map with a database and/or design document, view, and options (no implict include_docs=true):
 
 ```clojure
 (get-docs {:db "articles" :design "blog" :view "most-recent" :descending true :include_docs true :limit 10}
-          (fn [resp] (js/alert (->> resp :rows first :doc :title))))
+          (fn [resp] (js/alert (-> resp :rows first :doc :title))))
 ```
 
 ### `post-docs`
