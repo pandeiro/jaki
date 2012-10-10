@@ -36,6 +36,12 @@
     (str "_design/" (js/encodeURIComponent (subs id (.length "_design/"))))
     (js/encodeURIComponent id)))
 
+;;
+;; CouchDB API begins here
+;;
+
+(declare get-user-db post-docs)
+
 (defn config
   ([callback]
      (req/request (url "/_config") callback))
@@ -153,7 +159,10 @@
   ([doc-or-docs] (post-docs doc-or-docs nil))
   ([doc-or-docs callback] (post-docs doc-or-docs (resolve-db) callback))
   ([doc-or-docs db callback]
-     (let [data {:docs (if (vector? doc-or-docs) doc-or-docs (vector doc-or-docs))}]
+     (let [data {:docs (cond (vector? doc-or-docs) doc-or-docs
+                             (map? doc-or-docs)    (vector doc-or-docs)
+                             (coll? doc-or-docs)   (vec doc-or-docs)
+                             :else nil)}]
        (req/post (url (str "/" db "/_bulk_docs")) callback data))))
 
 (defn delete-docs
@@ -163,3 +172,5 @@
      (if (vector? doc-or-docs)
        (req/post (url (str "/" db "/_bulk_docs")) callback (vec (for [d doc-or-docs] (assoc d :_deleted true))))
        (req/delete (url (str "/" db "/" (:_id doc-or-docs))) callback))))
+
+;; TODO: implement _changes API
