@@ -102,7 +102,7 @@
   (req/get (url "/_all_dbs") callback))
 
 (defn create-db [name & [callback]]
-  (req/put (url (str "/" name) callback)))
+  (req/put (url (str "/" name)) callback))
 
 (defn drop-db [name & [callback]]
   (req/delete (url (str "/" name)) callback))
